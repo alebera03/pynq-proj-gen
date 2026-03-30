@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Build essentials
+sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential -y
+
 # Capture the starting directory
 ORIGINAL_DIR=$(pwd)
 INSTALL_DIR="/opt/pz2"
