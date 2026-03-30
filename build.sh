@@ -7,7 +7,7 @@ INSTALL_DIR="/opt/pz2"
 # 1. Download/Update repository
 if [ -d "pynq-proj-gen" ]; then
     echo "Directory exists, pulling latest changes..."
-    cd pynq-proj-gen && git pull
+    cd pynq-proj-gen && git pull origin master
 else
     git clone https://github.com/AleBera03/pynq-proj-gen
     cd pynq-proj-gen

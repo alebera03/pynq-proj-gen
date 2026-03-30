@@ -1,97 +1,64 @@
+use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
-use anyhow::{Result, anyhow};
-use std::{fs::{DirBuilder, File}, io::{BufWriter, Write}, path::PathBuf};
 use fs_extra::dir::{copy, CopyOptions};
+use std::{
+    fs::{File, create_dir_all}, io::{BufWriter, Write}, option, path::PathBuf
+};
 
-/// command to handle PC interaction with remote pynq board
 #[derive(Parser, Debug)]
-#[command(about, long_about = None)]
+#[command(about = "Command to handle PC interaction with remote pynq board", long_about = None)]
 struct Args {
     #[command(subcommand)]
-    command: Option<Commands>
+    command: Commands, // Removed Option since you error out anyway if empty
 }
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// create new project with scripts inside
+    /// Create new project with scripts inside
     New {
         #[arg(long)]
         local: PathBuf,
         #[arg(long)]
-        remote: PathBuf
-    }
+        remote: PathBuf,
+    },
 }
 
-/*
-/opt
-    ...
-    /pz2
-        pz2     # executable
-        files   # scripts to copy within new project 
-    ...
-*/
+const SCRIPTS_DIR: &str = "/opt/pz2/.scripts";
 
-
-const FILES_DIR: &str = "/opt/pz2/files";
-
-fn main() -> Result<()>{
-
+fn main() -> Result<()> {
     let args = Args::parse();
 
-    match &args.command {
-
-        Some(Commands::New { local, remote }) => {
-
-            let mut dirbuilder = DirBuilder::new();
-            let LOCAL_DIR: String;
-            let REMOTE_DIR: String;
-            dirbuilder.recursive(true);
-
-            // check str
-            match local.to_str() {
-                Some(l) => {
-                    LOCAL_DIR = String::from(l);
-                },
-                None => {
-                    return Err(anyhow!("given string is not a valid path"));
-                }
-            }
-            match remote.to_str() {
-                Some(r) => {
-                    REMOTE_DIR = String::from(r);
-                },
-                None => {
-                    return Err(anyhow!("given string is not a valid path"));
-                }
+    match args.command {
+        Commands::New { local, remote } => {
+            // 1. Validation: If local already exists, bail out early.
+            if local.exists() {
+                return Err(anyhow!("Directory {:?} already exists!", local));
             }
 
-            // if local already exists raise an error
-            if local.is_dir(){
-                return Err(anyhow!("choose another directory, {:?} already exists", local));
-            };
+            // 2. Create the base local directory and the 'files' subdir
+            let scripts_subdir = local.join(".scripts");
+            create_dir_all(&scripts_subdir).context("Failed to create .scripts folder")?;
 
-            // create local folder path
-            dirbuilder.create(local.as_path())?;
-
-            // copy into local folder scripts and .env
-            // configure options
+            // 3. Copy scripts from /opt/pz2/.scripts to local/.scripts
             let mut options = CopyOptions::new();
-            options.overwrite = true;   // overwrite if exists
-            options.copy_inside = true; // copy all contentes (not DIR) to destinazione
-            copy(FILES_DIR, REMOTE_DIR.clone() + "/.scripts", &options)?;
+            options.overwrite = true;
+            options.content_only = true;
+        
+            // fs_extra::dir::copy needs the destination parent to exist
+            copy(SCRIPTS_DIR, &scripts_subdir, &options)
+                .map_err(|e| anyhow!("Failed to copy scripts: {}", e))?;
 
-            // create .env file inside .../files
-            let file = File::create_new(LOCAL_DIR.clone()+"/files/.env")?;
+            // 4. Create .env file inside the 'files' folder
+            let env_path = scripts_subdir.join(".env");
+            let file = File::create(&env_path).context("Failed to create .env file")?;
             let mut writer = BufWriter::new(&file);
-            writeln!(writer, "LOCAL_PROJECT_PATH=\"{}\"", &LOCAL_DIR)?;
-            writeln!(writer, "REMOTE_PROJECT_PATH=\"{}\"", &REMOTE_DIR)?;
+            
+            // Writing paths to .env
+            writeln!(writer, "LOCAL_PROJECT_PATH={:?}", local)?;
+            writeln!(writer, "REMOTE_PROJECT_PATH={:?}", remote)?;
 
+            println!("Successfully initialized project at {:?}", local);
             Ok(())
-
-        },
-        _ => {
-            return Err(anyhow!("no subcommand inserted"));
         }
     }
-
 }
