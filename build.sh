@@ -41,5 +41,6 @@ fi
 
 # Return to original directory
 cd "$ORIGINAL_DIR"
+rm -rf pynq-proj-gen
 
 echo "Installation complete. Please run 'source ~/.bashrc' or restart your terminal."
