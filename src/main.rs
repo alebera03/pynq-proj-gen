@@ -6,7 +6,9 @@ use std::{
 };
 
 #[derive(Parser, Debug)]
-#[command(about = "Command to handle PC interaction with remote pynq board", long_about = None)]
+#[command(about, long_about = None)]
+/// Tool useful to help linux PC to develop over ssh on pynq board creating new project with scripts that help to
+/// sync changes with board and remotely launch there run command (python)
 struct Args {
     #[command(subcommand)]
     command: Commands, // Removed Option since you error out anyway if empty
