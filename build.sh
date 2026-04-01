@@ -1,9 +1,10 @@
 #!/bin/bash
 
-REMOTE_IP="192.168.2.99"
+REMOTE_IP="192.168.137.75"
 
 # Build essentials
 sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential -y
+sudo apt autoremove
 
 # Check ssh configuration
 if [[ -z $(ls -l ~/.ssh/id_*) ]]; then
