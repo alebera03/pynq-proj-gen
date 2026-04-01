@@ -14,14 +14,21 @@ set -a
 source ./.env
 set +a
 
+echo "envs saved"
+
 # check if dir already exists
-ssh xilinx@192.168.2.99 "mkdir -p $REMOTE_PROJECT_PATH"
+ssh xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
+
+echo "remote folder already exists"
 
 # sync files
-rsync -avz --delete --exclude ./.scripts \
-            .. xilinx@192.168.2.99:$REMOTE_PROJECT_PATH
+rsync -avz --delete --exclude . \
+            .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
+
+
+echo "running ssh remote terminal"
 
 # run pseudo-terminal shell attaching run-remote.sh
-ssh -t xilinx@192.168.2.99 "cd $REMOTE_PROJECT_PATH && bash -c '$(cat run-remote.sh)' -- $file"
+ssh -t xilinx@$REMOTE_IP "cd $REMOTE_PROJECT_PATH && bash -c '$(cat run-remote.sh)' -- $file"
 
 cd $CURRENT_DIR
