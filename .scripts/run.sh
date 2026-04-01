@@ -19,11 +19,14 @@ echo "envs saved"
 # check if dir already exists
 ssh xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
 
-echo "remote folder already exists"
+echo "remote folder is ready"
 
 # sync files
-rsync -avz --delete --exclude . \
+rsync -avz --delete --exclude .scripts \
+                    --exclude loaded.xclbin \
             .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
+# NOTE: '..' means that now rsync's POV IS '$CURRENT_DIR' and not '$CURRENT_DIR/.scripts',
+#           so we want to exclude '.scripts' (NOT '.')
 
 
 echo "running ssh remote terminal"
