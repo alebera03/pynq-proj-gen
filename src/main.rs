@@ -147,7 +147,7 @@ fn main() -> Result<()> {
                         }
                         Command::new("bash")
                             .args([open_path, env_path])
-                            .spawn()?;
+                            .status()?;
                     }
                     else {
                         return Err(anyhow!("this folder is not a pz2 project"));
