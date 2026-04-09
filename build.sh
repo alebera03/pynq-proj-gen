@@ -23,7 +23,8 @@ if [[ -z $(ls -l ~/.ssh/id_*) ]]; then
     ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 fi
 if [[ -z $(ssh -p $REMOTE_PORT xilinx@$REMOTE_IP "grep '$(cat ~/.ssh/id_*.pub)' ~/.ssh/authorized_keys") ]]; then
-    ssh-copy-id xilinx@$REMOTE_IP
+    echo "runnnig ssh-copy-id ..."
+    ssh-copy-id -p $REMOTE_PORT xilinx@$REMOTE_IP
 fi
 
 # Capture the starting directory
