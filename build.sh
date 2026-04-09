@@ -20,9 +20,9 @@ echo "all updated"
 
 # Check ssh configuration
 if [[ -z $(ls -l ~/.ssh/id_*) ]]; then
-    ssh-keygen -t rsa
+    ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 fi
-if [[ -z $(ssh xilinx@$REMOTE_IP "grep '$(cat ~/.ssh/id_*.pub)' ~/.ssh/authorized_keys") ]]; then
+if [[ -z $(ssh -p $REMOTE_PORT xilinx@$REMOTE_IP "grep '$(cat ~/.ssh/id_*.pub)' ~/.ssh/authorized_keys") ]]; then
     ssh-copy-id xilinx@$REMOTE_IP
 fi
 
@@ -48,6 +48,10 @@ echo "Setting up $INSTALL_DIR..."
 sudo rm -rf "$INSTALL_DIR"
 sudo mkdir -p "$INSTALL_DIR/bin"
 sudo mkdir -p "$INSTALL_DIR/.scripts"
+
+# Write .env inside .scripts
+
+printf "REMOTE_PORT=\'$REMOTE_PORT\'\nREMOTE_IP=\'$REMOTE_IP\'" | sudo tee "$INSTALL_DIR/.scripts/.env" > /dev/null
 
 # Copy bin file and scripts
 sudo cp ./target/release/pz2 "$INSTALL_DIR/bin/" -v
