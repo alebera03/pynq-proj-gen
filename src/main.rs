@@ -9,8 +9,7 @@ use std::process::Command;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
-/// Tool useful to help linux PC to develop over ssh on pynq board creating new project with utils that help to
-/// sync changes with board and remotely launch there run command (python)
+/// Tool useful to help linux PC to develop over ssh on pynq board
 struct Args {
     #[command(subcommand)]
     command: Option<Commands>
@@ -20,12 +19,16 @@ struct Args {
 enum Commands {
     /// Create new project with utils inside
     New {
+        /// Local directory (PC side), default current directory
         #[arg(short, long)]
         local: Option<PathBuf>,
+        /// Remote directory (board side)
         #[arg(short, long)]
         remote: PathBuf,
     },
+    /// Sync your changes 
     Sync,
+    /// Open secondary shell directly inside pynq environemnt. From there launch script
     Open
 }
 
