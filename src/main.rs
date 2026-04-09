@@ -119,7 +119,7 @@ fn main() -> Result<()> {
                         if !env_path.exists() || !sync_path.exists() {
                             return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
                         }
-                        Command::new("sh")
+                        Command::new("bash")
                             .args([sync_path, env_path])
                             .status()?;
                     }
@@ -140,13 +140,13 @@ fn main() -> Result<()> {
                 Ok(current_dir) => {
                     let pz2_dir = current_dir.join(".pz2");
                     let env_path = pz2_dir.join(".env");
-                    let sync_path = pz2_dir.join("sync.sh");
+                    let open_path = pz2_dir.join("open.sh");
                     if pz2_dir.exists() {
-                        if !env_path.exists() || !sync_path.exists() {
+                        if !env_path.exists() || !open_path.exists() {
                             return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
                         }
-                        Command::new("sh")
-                            .args([sync_path, env_path])
+                        Command::new("bash")
+                            .args([open_path, env_path])
                             .spawn()?;
                     }
                     else {

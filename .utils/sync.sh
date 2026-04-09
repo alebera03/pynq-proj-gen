@@ -13,7 +13,7 @@ ssh -p $REMOTE_PORT xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
 echo "remote folder: $REMOTE_PROJECT_PATH is ready"
 
 # sync files
-git add LOCAL_PROJECT_PATH
+git add $LOCAL_PROJECT_PATH
 rsync -avz -h -P \
     --exclude='.git' \
     --filter=':- .gitignore' -e "ssh -p $REMOTE_PORT" \
