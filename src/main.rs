@@ -125,7 +125,7 @@ fn main() -> Result<()> {
             }
 
 
-            println!("Successfully initialized project at {:?}", local);
+            println!("Successfully initialized project at {:?}", src);
             Ok(())
         },
 
