@@ -33,22 +33,24 @@ fn main() -> Result<()> {
     match &args.command {
         Some(Commands::New { local, remote }) => {
             // validation: If local already exists, bail out early.
+            let scripts_subdir = local.join(".scripts");
             if local.exists() {
                 loop {
                     let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
                     if s == "y" {
                         // remove current local/.scripts file
-                        remove_dir_all(local)?;
+                        if scripts_subdir.exists() {
+                            remove_dir_all(&scripts_subdir)?;
+                        }
                         break;
                     }
                     else if s == "n" {
                         return Err(anyhow!("Directory {:?} already exists!", local));
-                    };
+                    }
                 };
             }
 
-            // Create the base local directory and the 'files' subdir
-            let scripts_subdir = local.join(".scripts");
+            // Create the base local directory and the '.scripts' subdir
             create_dir_all(&scripts_subdir).context("Failed to create .scripts folder")?;
 
             // Copy options
@@ -60,15 +62,17 @@ fn main() -> Result<()> {
             copy(SCRIPTS_DIR, &scripts_subdir, &options)
                 .map_err(|e| anyhow!("Failed to copy scripts: {}", e))?;
 
-            // Open .env file inside the '.scripts' folder
-            let env_path = scripts_subdir.join(".env");
-            if !env_path.exists() {
-                return Err(anyhow!(".env does not exist, re-run build.sh"));
+
+            let source_env = std::path::Path::new(SCRIPTS_DIR).join(".env");
+            let dest_env = scripts_subdir.join(".env");
+            if !source_env.exists() {
+                return Err(anyhow!("Source .env not found in {}, re-run build.sh", SCRIPTS_DIR));
             }
+            std::fs::copy(&source_env, &dest_env).context("Failed to copy .env template")?;
             let file = OpenOptions::new()
-                .write(true)
-                .append(true) // append to EOF
-                .open(&env_path)?;
+                .append(true)
+                .open(&dest_env)
+                .context("Failed to open local .env for appending")?;
             let mut writer = BufWriter::new(&file);
             // Writing paths to .env
             writeln!(writer, "LOCAL_PROJECT_PATH={:?}", local)?;
