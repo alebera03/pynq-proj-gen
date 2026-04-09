@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
 use std::{
-    fs::{File, create_dir_all}, io::{BufWriter, Write}, path::PathBuf
+    fs::{File, create_dir_all}, io::{BufWriter, stdin, stdout, Write}, path::PathBuf
 };
 
 #[derive(Parser, Debug)]
@@ -18,9 +18,9 @@ struct Args {
 enum Commands {
     /// Create new project with scripts inside
     New {
-        #[arg(long)]
+        #[arg(short, long)]
         local: PathBuf,
-        #[arg(long)]
+        #[arg(short, long)]
         remote: PathBuf,
     },
 }
@@ -32,10 +32,17 @@ fn main() -> Result<()> {
 
     match &args.command {
         Some(Commands::New { local, remote }) => {
-
-            // alidation: If local already exists, bail out early.
+            // validation: If local already exists, bail out early.
             if local.exists() {
-                return Err(anyhow!("Directory {:?} already exists!", local));
+                loop {
+                    let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
+                    if s == "y" {
+                        break;
+                    }
+                    else if s == "n" {
+                        return Err(anyhow!("Directory {:?} already exists!", local));
+                    };
+                };
             }
 
             // Create the base local directory and the 'files' subdir
@@ -65,4 +72,19 @@ fn main() -> Result<()> {
         },
         None => {Ok(())}
     }
+}
+
+
+fn read_tty_input(msg: &str) -> Result<String> {
+    let mut s=String::new();
+    print!("{}", msg);
+    let _=stdout().flush();
+    stdin().read_line(&mut s)?;
+    if let Some('\n')=s.chars().next_back() {
+        s.pop();
+    };
+    if let Some('\r')=s.chars().next_back() {
+        s.pop();
+    };
+    Ok(s)
 }

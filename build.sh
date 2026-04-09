@@ -1,9 +1,11 @@
 #!/bin/bash
 
-REMOTE_IP="192.168.137.75"
+echo -n "insert ip address to connect with ssh: "
+read -r ans
+REMOTE_IP=$ans
 
 
-sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential
+sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential -y
 sudo apt autoremove
 
 # Check ssh configuration
