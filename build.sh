@@ -15,7 +15,7 @@ echo "ssh port:$REMOTE_PORT at ip: $REMOTE_IP"
 
 sudo apt update -y
 sudo apt install build-essential -y
-sudo apt install pkg-config libssl-dev
+sudo apt install pkg-config libssl-dev -y
 sudo apt autoremove -y
 
 echo "all updated"
@@ -50,15 +50,15 @@ cargo build -r
 echo "Setting up $INSTALL_DIR..."
 sudo rm -rf "$INSTALL_DIR"
 sudo mkdir -p "$INSTALL_DIR/bin"
-sudo mkdir -p "$INSTALL_DIR/.scripts"
+sudo mkdir -p "$INSTALL_DIR/.utils"
 
-# Write .env inside .scripts
+# Write .env inside .utils
 
-printf "REMOTE_PORT=\"$REMOTE_PORT\"\nREMOTE_IP=\"$REMOTE_IP\"\n" | sudo tee "$INSTALL_DIR/.scripts/.env" > /dev/null
+printf "REMOTE_PORT=\"$REMOTE_PORT\"\nREMOTE_IP=\"$REMOTE_IP\"\n" | sudo tee "$INSTALL_DIR/.utils/.env" > /dev/null
 
-# Copy bin file and scripts
+# Copy bin file and utils
 sudo cp ./target/release/pz2 "$INSTALL_DIR/bin/" -v
-sudo cp -r ./.scripts/* "$INSTALL_DIR/.scripts/" -v
+sudo cp -r ./.utils/* "$INSTALL_DIR/.utils/" -v
 
 # Set permissions
 sudo chmod -R 755 "$INSTALL_DIR"

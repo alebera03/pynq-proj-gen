@@ -5,10 +5,11 @@ use git2::Repository;
 use std::{
     fs::{OpenOptions, create_dir_all, remove_dir_all}, io::{BufWriter, Write, stdin, stdout}, path::PathBuf
 };
+use std::process::Command;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
-/// Tool useful to help linux PC to develop over ssh on pynq board creating new project with scripts that help to
+/// Tool useful to help linux PC to develop over ssh on pynq board creating new project with utils that help to
 /// sync changes with board and remotely launch there run command (python)
 struct Args {
     #[command(subcommand)]
@@ -17,16 +18,18 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// Create new project with scripts inside
+    /// Create new project with utils inside
     New {
         #[arg(short, long)]
         local: PathBuf,
         #[arg(short, long)]
         remote: PathBuf,
     },
+    Sync,
+    Open
 }
 
-const SCRIPTS_DIR: &str = "/opt/pz2/.scripts";
+const UTILS_DIR: &str = "/opt/pz2/.utils";
 
 fn main() -> Result<()> {
     let args = Args::parse();
@@ -34,14 +37,14 @@ fn main() -> Result<()> {
     match &args.command {
         Some(Commands::New { local, remote }) => {
             // validation: If local already exists, bail out early.
-            let scripts_subdir = local.join(".scripts");
+            let pz2_dot_subdir = local.join(".pz2");
             if local.exists() {
                 loop {
                     let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
                     if s == "y" {
-                        // remove current local/.scripts file
-                        if scripts_subdir.exists() {
-                            remove_dir_all(&scripts_subdir)?;
+                        // remove current local/.utils file
+                        if pz2_dot_subdir.exists() {
+                            remove_dir_all(&pz2_dot_subdir)?;
                         }
                         break;
                     }
@@ -51,8 +54,8 @@ fn main() -> Result<()> {
                 };
             }
 
-            // Create the base local directory and the '.scripts' subdir
-            create_dir_all(&scripts_subdir).context("Failed to create .scripts folder")?;
+            // Create the base local directory and the '.pz2' subdir
+            create_dir_all(&pz2_dot_subdir).context("Failed to create .pz2 folder")?;
 
             // Copy options
             let mut options = CopyOptions::new();
@@ -60,14 +63,14 @@ fn main() -> Result<()> {
             options.content_only = true;
 
             // fs_extra::dir::copy needs the destination parent to exist
-            copy(SCRIPTS_DIR, &scripts_subdir, &options)
-                .map_err(|e| anyhow!("Failed to copy scripts: {}", e))?;
+            copy(UTILS_DIR, &pz2_dot_subdir, &options)
+                .map_err(|e| anyhow!("Failed to copy utils: {}", e))?;
 
 
-            let source_env = std::path::Path::new(SCRIPTS_DIR).join(".env");
-            let dest_env = scripts_subdir.join(".env");
+            let source_env = std::path::Path::new(UTILS_DIR).join(".env");
+            let dest_env = pz2_dot_subdir.join(".env");
             if !source_env.exists() {
-                return Err(anyhow!("Source .env not found in {}, re-run build.sh", SCRIPTS_DIR));
+                return Err(anyhow!("Source .env not found in {}, re-run 'build.sh'", UTILS_DIR));
             }
             std::fs::copy(&source_env, &dest_env).context("Failed to copy .env template")?;
             let env = OpenOptions::new()
@@ -81,7 +84,7 @@ fn main() -> Result<()> {
 
             // add git init e .gitignore
             if let Ok(_) = Repository::open(local) {
-                println!("repository is already initialized, remember to add '.scripts' within '.gitignore' file");
+                println!("repository is already initialized, remember to add '.pz2' within '.gitignore' file");
             } else {
                 match Repository::init(&local) {
                     Ok(_) => {
@@ -97,11 +100,17 @@ fn main() -> Result<()> {
                     .write(true)
                     .open(local.join(".gitignore"))?;
                 writer = BufWriter::new(gitignore);
-                writeln!(writer, ".scripts")?;
+                writeln!(writer, ".pz2")?;
             }
 
 
             println!("Successfully initialized project at {:?}", local);
+            Ok(())
+        },
+        Some(Commands::Sync) => {
+            Ok(())
+        },
+        Some(Commands::Open) => {
             Ok(())
         },
         None => {Ok(())}
