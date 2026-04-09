@@ -19,10 +19,15 @@ echo "envs saved"
 # check if dir already exists
 ssh -p $REMOTE_PORT xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
 
-echo "remote folder is ready"
+echo "remote folder: $REMOTE_PROJECT_PATH is ready"
 
 # sync files
-git ls-files -z | rsync -avz -e "ssh -p $REMOTE_PORT" --0 --files-from=- .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
+git add ..
+rsync -avz -h -P \
+    --delete \
+    --exclude='.git/' \
+    --filter=':- .gitignore' -e "ssh -p $REMOTE_PORT" \
+    .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
 # NOTE: '..' means that now rsync's POV IS '$CURRENT_DIR' and not '$CURRENT_DIR/.scripts',
 #           so we want to exclude '.scripts' (NOT '.')
 
@@ -30,6 +35,6 @@ git ls-files -z | rsync -avz -e "ssh -p $REMOTE_PORT" --0 --files-from=- .. xili
 echo "running ssh remote terminal"
 
 # run pseudo-terminal shell attaching run-remote.sh
-ssh -t xilinx@$REMOTE_IP "cd $REMOTE_PROJECT_PATH && bash -c '$(cat run-remote.sh)' -- $file"
+ssh -t -p $REMOTE_PORT xilinx@$REMOTE_IP "cd $REMOTE_PROJECT_PATH && bash -c '$(cat run-remote.sh)' -- $file"
 
 cd $CURRENT_DIR

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
+use git2::Repository;
 use std::{
     fs::{OpenOptions, create_dir_all, remove_dir_all}, io::{BufWriter, Write, stdin, stdout}, path::PathBuf
 };
@@ -69,14 +70,32 @@ fn main() -> Result<()> {
                 return Err(anyhow!("Source .env not found in {}, re-run build.sh", SCRIPTS_DIR));
             }
             std::fs::copy(&source_env, &dest_env).context("Failed to copy .env template")?;
-            let file = OpenOptions::new()
+            let env = OpenOptions::new()
                 .append(true)
                 .open(&dest_env)
                 .context("Failed to open local .env for appending")?;
-            let mut writer = BufWriter::new(&file);
+            let mut writer = BufWriter::new(env);
             // Writing paths to .env
             writeln!(writer, "LOCAL_PROJECT_PATH={:?}", local)?;
             writeln!(writer, "REMOTE_PROJECT_PATH={:?}", remote)?;
+
+            // add git init e .gitignore
+            match Repository::init(&local) {
+                Ok(_) => {
+                    println!("repository has correctly created");
+                },
+                Err(e) => {
+                    return Err(anyhow!(e));
+                }
+            };
+            let gitignore = OpenOptions::new()
+                .create(true)
+                .truncate(true)
+                .write(true)
+                .open(local.join(".gitignore"))?;
+            writer = BufWriter::new(gitignore);
+            writeln!(writer, ".scripts")?;
+
 
             println!("Successfully initialized project at {:?}", local);
             Ok(())

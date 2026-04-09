@@ -13,7 +13,9 @@ fi
 echo "ssh port:$REMOTE_PORT at ip: $REMOTE_IP"
 
 
-sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential -y
+sudo apt update -y
+sudo apt install build-essential -y
+sudo apt install pkg-config libssl-dev
 sudo apt autoremove -y
 
 echo "all updated"
