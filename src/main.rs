@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
 use git2::Repository;
 use std::{
-    fs::{OpenOptions, create_dir_all, remove_dir_all}, io::{BufWriter, Write, stdin, stdout}, path::PathBuf
+    env, fs::{OpenOptions, create_dir_all, remove_dir_all}, io::{BufWriter, Write, stdin, stdout}, path::PathBuf
 };
 use std::process::Command;
 
@@ -107,10 +107,57 @@ fn main() -> Result<()> {
             println!("Successfully initialized project at {:?}", local);
             Ok(())
         },
+
         Some(Commands::Sync) => {
+
+            match env::current_dir() {
+                Ok(current_dir) => {
+                    let pz2_dir = current_dir.join(".pz2");
+                    let env_path = pz2_dir.join(".env");
+                    let sync_path = pz2_dir.join("sync.sh");
+                    if pz2_dir.exists() {
+                        if !env_path.exists() || !sync_path.exists() {
+                            return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
+                        }
+                        Command::new("sh")
+                            .args([sync_path, env_path])
+                            .status()?;
+                    }
+                    else {
+                        return Err(anyhow!("this folder is not a pz2 project"));
+                    }
+                },
+                Err(e) => {
+                    return Err(anyhow!(e));
+                }
+            }
+
             Ok(())
         },
         Some(Commands::Open) => {
+
+            match env::current_dir() {
+                Ok(current_dir) => {
+                    let pz2_dir = current_dir.join(".pz2");
+                    let env_path = pz2_dir.join(".env");
+                    let sync_path = pz2_dir.join("sync.sh");
+                    if pz2_dir.exists() {
+                        if !env_path.exists() || !sync_path.exists() {
+                            return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
+                        }
+                        Command::new("sh")
+                            .args([sync_path, env_path])
+                            .spawn()?;
+                    }
+                    else {
+                        return Err(anyhow!("this folder is not a pz2 project"));
+                    }
+                },
+                Err(e) => {
+                    return Err(anyhow!(e));
+                }
+            }
+
             Ok(())
         },
         None => {Ok(())}

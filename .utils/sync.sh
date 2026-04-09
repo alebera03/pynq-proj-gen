@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $1 is abs path of local
+# $1 is abs path of .env to scan
 
 # save envs
 set -a
-source $1/.env
+source $1
 set +a
 echo "envs saved"
 
