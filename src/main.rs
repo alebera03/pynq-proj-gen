@@ -21,7 +21,7 @@ enum Commands {
     /// Create new project with utils inside
     New {
         #[arg(short, long)]
-        local: PathBuf,
+        local: Option<PathBuf>,
         #[arg(short, long)]
         remote: PathBuf,
     },
@@ -36,9 +36,27 @@ fn main() -> Result<()> {
 
     match &args.command {
         Some(Commands::New { local, remote }) => {
+
+            let src:PathBuf;
+            match local {
+                Some(l) => {
+                    src = l.clone();
+                },
+                None => {
+                    match env::current_dir() {
+                        Ok(d) => {
+                            src = d;
+                        },
+                        Err(e) => { 
+                            return Err(anyhow!(e));
+                        }
+                    }
+                }
+            }
+
             // validation: If local already exists, bail out early.
-            let pz2_dot_subdir = local.join(".pz2");
-            if local.exists() {
+            let pz2_dot_subdir = src.join(".pz2");
+            if src.exists() {
                 loop {
                     let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
                     if s == "y" {
@@ -79,14 +97,14 @@ fn main() -> Result<()> {
                 .context("Failed to open local .env for appending")?;
             let mut writer = BufWriter::new(env);
             // Writing paths to .env
-            writeln!(writer, "LOCAL_PROJECT_PATH={:?}", local)?;
+            writeln!(writer, "LOCAL_PROJECT_PATH={:?}", src)?;
             writeln!(writer, "REMOTE_PROJECT_PATH={:?}", remote)?;
 
             // add git init e .gitignore
-            if let Ok(_) = Repository::open(local) {
+            if let Ok(_) = Repository::open(&src) {
                 println!("repository is already initialized, remember to add '.pz2' within '.gitignore' file");
             } else {
-                match Repository::init(&local) {
+                match Repository::init(&src) {
                     Ok(_) => {
                         println!("repository has correctly created");
                     },
@@ -98,7 +116,7 @@ fn main() -> Result<()> {
                     .create(true)
                     .truncate(true)
                     .write(true)
-                    .open(local.join(".gitignore"))?;
+                    .open(src.join(".gitignore"))?;
                 writer = BufWriter::new(gitignore);
                 writeln!(writer, ".pz2")?;
             }
