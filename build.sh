@@ -53,7 +53,6 @@ sudo mkdir -p "$INSTALL_DIR/bin"
 sudo mkdir -p "$INSTALL_DIR/.utils"
 
 # Write .env inside .utils
-
 printf "REMOTE_PORT=\"$REMOTE_PORT\"\nREMOTE_IP=\"$REMOTE_IP\"\n" | sudo tee "$INSTALL_DIR/.utils/.env" > /dev/null
 
 # Copy bin file and utils
