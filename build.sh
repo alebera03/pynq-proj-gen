@@ -51,7 +51,7 @@ sudo mkdir -p "$INSTALL_DIR/.scripts"
 
 # Write .env inside .scripts
 
-printf "REMOTE_PORT=\'$REMOTE_PORT\'\nREMOTE_IP=\'$REMOTE_IP\'" | sudo tee "$INSTALL_DIR/.scripts/.env" > /dev/null
+printf "REMOTE_PORT=\"$REMOTE_PORT\"\nREMOTE_IP=\"$REMOTE_IP\"\n" | sudo tee "$INSTALL_DIR/.scripts/.env" > /dev/null
 
 # Copy bin file and scripts
 sudo cp ./target/release/pz2 "$INSTALL_DIR/bin/" -v

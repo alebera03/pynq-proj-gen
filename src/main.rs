@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
 use std::{
-    fs::{File, create_dir_all}, io::{BufWriter, stdin, stdout, Write}, path::PathBuf
+    fs::{OpenOptions, create_dir_all, remove_dir_all}, io::{BufWriter, Write, stdin, stdout}, path::PathBuf
 };
 
 #[derive(Parser, Debug)]
@@ -37,6 +37,8 @@ fn main() -> Result<()> {
                 loop {
                     let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
                     if s == "y" {
+                        // remove current local/.scripts file
+                        remove_dir_all(local)?;
                         break;
                     }
                     else if s == "n" {
@@ -49,7 +51,7 @@ fn main() -> Result<()> {
             let scripts_subdir = local.join(".scripts");
             create_dir_all(&scripts_subdir).context("Failed to create .scripts folder")?;
 
-            // Copy scripts from /opt/pz2/.scripts to local/.scripts
+            // Copy options
             let mut options = CopyOptions::new();
             options.overwrite = true;
             options.content_only = true;
@@ -58,11 +60,16 @@ fn main() -> Result<()> {
             copy(SCRIPTS_DIR, &scripts_subdir, &options)
                 .map_err(|e| anyhow!("Failed to copy scripts: {}", e))?;
 
-            // Create .env file inside the 'files' folder
+            // Open .env file inside the '.scripts' folder
             let env_path = scripts_subdir.join(".env");
-            let file = File::create(&env_path).context("Failed to create .env file")?;
+            if !env_path.exists() {
+                return Err(anyhow!(".env does not exist, re-run build.sh"));
+            }
+            let file = OpenOptions::new()
+                .write(true)
+                .append(true) // append to EOF
+                .open(&env_path)?;
             let mut writer = BufWriter::new(&file);
-            
             // Writing paths to .env
             writeln!(writer, "LOCAL_PROJECT_PATH={:?}", local)?;
             writeln!(writer, "REMOTE_PROJECT_PATH={:?}", remote)?;

@@ -17,12 +17,12 @@ set +a
 echo "envs saved"
 
 # check if dir already exists
-ssh xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
+ssh -p $REMOTE_PORT xilinx@$REMOTE_IP "mkdir -p $REMOTE_PROJECT_PATH"
 
 echo "remote folder is ready"
 
 # sync files
-git ls-files -z | rsync -avz --0 --files-from=- .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
+git ls-files -z | rsync -avz -e "ssh -p $REMOTE_PORT" --0 --files-from=- .. xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH
 # NOTE: '..' means that now rsync's POV IS '$CURRENT_DIR' and not '$CURRENT_DIR/.scripts',
 #           so we want to exclude '.scripts' (NOT '.')
 
