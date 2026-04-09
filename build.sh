@@ -3,10 +3,20 @@
 echo -n "insert ip address to connect with ssh: "
 read -r ans
 REMOTE_IP=$ans
+REMOTE_PORT="22"
+echo -n "insert port [enter for 22]: "
+read -r ans
+if [[ -n $ans ]]; then
+    REMOTE_PORT=$ans
+fi
+
+echo "ssh port:$REMOTE_PORT at ip: $REMOTE_IP"
 
 
 sudo apt update -y && sudo apt upgrade -y && sudo apt install build-essential -y
-sudo apt autoremove
+sudo apt autoremove -y
+
+echo "all updated"
 
 # Check ssh configuration
 if [[ -z $(ls -l ~/.ssh/id_*) ]]; then

@@ -1,6 +1,8 @@
 # PYNQ-PROJ-GEN
 ## Installation
-Installation is pretty easy, run this command
+Installation is pretty easy:
+- ensure that you are connected with your board via ssh
+- run this command
 ```
 bash <(curl -sSL https://raw.githubusercontent.com/AleBera03/pynq-proj-gen/master/build.sh)
 ```
