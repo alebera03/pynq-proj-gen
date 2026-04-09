@@ -80,21 +80,25 @@ fn main() -> Result<()> {
             writeln!(writer, "REMOTE_PROJECT_PATH={:?}", remote)?;
 
             // add git init e .gitignore
-            match Repository::init(&local) {
-                Ok(_) => {
-                    println!("repository has correctly created");
-                },
-                Err(e) => {
-                    return Err(anyhow!(e));
-                }
-            };
-            let gitignore = OpenOptions::new()
-                .create(true)
-                .truncate(true)
-                .write(true)
-                .open(local.join(".gitignore"))?;
-            writer = BufWriter::new(gitignore);
-            writeln!(writer, ".scripts")?;
+            if let Ok(_) = Repository::open(local) {
+                println!("repository is already initialized, remember to add '.scripts' within '.gitignore' file");
+            } else {
+                match Repository::init(&local) {
+                    Ok(_) => {
+                        println!("repository has correctly created");
+                    },
+                    Err(e) => {
+                        return Err(anyhow!(e));
+                    }
+                };
+                let gitignore = OpenOptions::new()
+                    .create(true)
+                    .truncate(true)
+                    .write(true)
+                    .open(local.join(".gitignore"))?;
+                writer = BufWriter::new(gitignore);
+                writeln!(writer, ".scripts")?;
+            }
 
 
             println!("Successfully initialized project at {:?}", local);
