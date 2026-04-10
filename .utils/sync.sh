@@ -1,6 +1,12 @@
 #!/bin/bash
 
 # $1 is abs path of .env to scan
+# $2 option -d|--delete which
+
+ARG_DELETE=""
+if [[ $2 == "-d" || $2 == "--delete" ]]; then
+    ARG_DELETE=$2
+fi
 
 # save envs
 set -a
@@ -14,7 +20,7 @@ echo "remote folder: $REMOTE_PROJECT_PATH is ready"
 
 # sync files
 git add "$LOCAL_PROJECT_PATH"
-rsync -avz -h -P \
+rsync -avz -h -P $ARG_DELETE \
     --exclude='.git' \
     --filter=':- .gitignore' -e "ssh -p $REMOTE_PORT" \
     "$LOCAL_PROJECT_PATH/" "xilinx@$REMOTE_IP:$REMOTE_PROJECT_PATH"

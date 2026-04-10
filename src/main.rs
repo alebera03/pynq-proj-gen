@@ -27,7 +27,10 @@ enum Commands {
         remote: PathBuf,
     },
     /// Sync your changes 
-    Sync,
+    Sync {
+        #[arg(short, long)]
+        delete: Option<String>
+    },
     /// Open secondary shell directly inside pynq environemnt. From there launch script
     Open
 }
@@ -61,10 +64,11 @@ fn main() -> Result<()> {
             let pz2_dot_subdir = src.join(".pz2");
             if src.exists() {
                 loop {
-                    let s = read_tty_input("Do you want to overwrite [y/n]: ")?;
+                    let s = read_tty_input("Local folder already exists, continue ? [y/n]: ")?;
                     if s == "y" {
                         // remove current local/.utils file
                         if pz2_dot_subdir.exists() {
+                            println!(".pz2 folder already exists, it will be rewritten");
                             remove_dir_all(&pz2_dot_subdir)?;
                         }
                         break;
@@ -129,7 +133,7 @@ fn main() -> Result<()> {
             Ok(())
         },
 
-        Some(Commands::Sync) => {
+        Some(Commands::Sync {delete}) => {
 
             match env::current_dir() {
                 Ok(current_dir) => {
@@ -140,9 +144,19 @@ fn main() -> Result<()> {
                         if !env_path.exists() || !sync_path.exists() {
                             return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
                         }
-                        Command::new("bash")
-                            .args([sync_path, env_path])
-                            .status()?;
+                        match delete {
+                            Some(arg) => {
+                                Command::new("bash")
+                                    .args([sync_path, env_path])
+                                    .arg(arg)
+                                    .status()?;
+                            },
+                            None => {
+                                Command::new("bash")
+                                    .args([sync_path, env_path])
+                                    .status()?;
+                            }
+                        }
                     }
                     else {
                         return Err(anyhow!("this folder is not a pz2 project"));
