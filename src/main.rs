@@ -34,7 +34,7 @@ enum Commands {
     Sync {
         /// Remove to remote folder all files, including those within .gitignore
         #[arg(short, long)]
-        delete: Option<String>
+        delete: bool
     },
     /// Open secondary shell directly inside pynq environemnt. From there launch script
     Open
@@ -149,19 +149,17 @@ fn main() -> Result<()> {
                         if !env_path.exists() || !sync_path.exists() {
                             return Err(anyhow!(".pz2 folder is broken, re-init project with 'pz2 new ...'"));
                         }
-                        match delete {
-                            Some(arg) => {
-                                Command::new("bash")
-                                    .args([sync_path, env_path])
-                                    .arg(arg)
-                                    .status()?;
-                            },
-                            None => {
-                                Command::new("bash")
-                                    .args([sync_path, env_path])
-                                    .status()?;
-                            }
+                        if *delete == true {
+                            Command::new("bash")
+                                .args([sync_path, env_path])
+                                .arg("-d")
+                                .status()?;
                         }
+                        else {
+                            Command::new("bash")
+                                .args([sync_path, env_path])
+                                .status()?;
+                        };
                     }
                     else {
                         return Err(anyhow!("this folder is not a pz2 project"));
