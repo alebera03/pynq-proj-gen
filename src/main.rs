@@ -26,8 +26,13 @@ enum Commands {
         #[arg(short, long)]
         remote: PathBuf,
     },
-    /// Sync your changes 
+    /// Sync your changes (.git folder is totally ignored).
+    /// If you want to use git, just initialize (directly on board) a new repository and then run this command
+    /// ```
+    /// git remote set-url origin <NEW_GIT_URL_HERE>
+    /// ```
     Sync {
+        /// Remove to remote folder all files, including those within .gitignore
         #[arg(short, long)]
         delete: Option<String>
     },
